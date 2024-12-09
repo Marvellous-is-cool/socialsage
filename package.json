@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build:css": "npx tailwindcss -i ./src/styles/tailwind.css -o ./public/css/tailwind.css --watch"
+    "build:css": "npx tailwindcss -i ./src/styles/tailwind.css -o ./public/css/tailwind.css --watch",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
