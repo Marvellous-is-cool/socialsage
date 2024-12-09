@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Plans</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/subscription.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="bg-dark text-white p-4 shadow-lg">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="h4">🌟 SocialSage | Subscription Plans</h1>
+            <a href="/dashboard" class="btn btn-outline-light btn-sm">Back to Dashboard</a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="subscription container py-5">
+        <!-- Current Plan Section -->
+        <% if (user.currentPlan) { %>
+            <div class="current-plan mb-5 p-4 rounded-3 shadow-lg bg-gradient-teal text-center text-white">
+                <h2 class="mb-4"><i class="bi bi-person-badge-fill"></i> Your Current Plan: <span class="text-gold"><%= user.currentPlan.name %></span></h2>
+                <div class="plan-details">
+                    <p><strong>Cost:</strong> N<%= user.currentPlan.price %>/month</p>
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-gold" style="width: <%= user.currentPlan.limitPercent %>%;" role="progressbar" aria-valuenow="<%= user.currentPlan.limitPercent %>" aria-valuemin="0" aria-valuemax="100">
+                            <%= user.currentPlan.remainingDays %> days remaining
+                        </div>
+                    </div>
+                    <p><strong>Renewal Date:</strong> <%= user.currentPlan.renewalDate %></p>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Plans Section -->
+<div class="row g-4">
+    <% plans.forEach(plan => { %>
+        <div class="col-md-4">
+            <div class="plan card shadow-lg h-100 p-4 position-relative bg-light">
+                <% if (plan.isPopular) { %>
+                    <span class="badge bg-teal text-white position-absolute top-0 end-0 mt-3 me-3">Popular</span>
+                <% } %>
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-3 text-info text-uppercase"><%= plan.plan_name %></h3>
+                    <p class="price display-6 text-success">N<%= plan.plan_amount %>/month</p>
+                    <ul class="list-group list-group-flush mb-4">
+                        <% plan.features.forEach(feature => { %> <!-- Loop over the features of each plan -->
+                            <li class="list-group-item"><i class="bi bi-check-circle-fill text-teal"></i> <%= feature %></li>
+                        <% }); %>
+                    </ul>
+                    <% if (user.currentPlan.name === plan.plan_name) { %>
+                        <button class="btn btn-secondary" disabled>Current Plan</button>
+                    <% } else { %>
+                        <button class="btn btn-outline-danger" onclick="initiatePayment('<%= plan.plan_name %>', <%= plan.plan_amount %>)">
+                            Upgrade to <%= plan.plan_name %>
+                        </button>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+</div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p>&copy; <%= new Date().getFullYear() %> SocialSage. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initiate payment via Paystack
+        function initiatePayment(plan, amount) {
+            const handler = PaystackPop.setup({
+                key: 'your-public-key',
+                email: '<%= user.email %>',
+                amount: amount * 100,
+                currency: 'USD',
+                callback: function (response) {
+                    fetch('/process-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ plan, amount, transactionId: response.reference }),
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Payment successful!');
+                            window.location.reload();
+                        } else {
+                            alert('Payment failed: ' + data.message);
+                        }
+                    });
+                },
+                onClose: function () {
+                    alert('Payment canceled.');
+                },
+            });
+            handler.openIframe();
+        }
+    </script>
+</body>
+</html>

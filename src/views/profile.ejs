@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile | SocialSage</title>
+  <link rel="stylesheet" href="/css/profile.css">
+  <link rel="icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+            <!-- flash -->
+            <%- include('./addons/layout.ejs') %>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="profile-header">
+        <h2>
+          <span class="site-name">
+            <span class="site-name-main">Social</span><span class="highlight">Sage</span>
+          </span>
+          <span class="divider">|</span>
+          <span class="page-title">Profile</span>
+        </h2>
+      </div>
+      <ul id="menu">
+        <li data-section="user-info" class="active">
+          <i class="icon">👤</i> User Info
+        </li>
+        <li data-section="past-tasks">
+          <i class="icon">📝</i> Past Tasks
+        </li>
+        <li data-section="account">
+          <i class="icon">💳</i> Account
+        </li>
+        <li data-section="withdrawal">
+          <i class="icon">💸</i> Withdrawal
+        </li>
+        <li data-section="referrals">
+          <i class="icon">👥</i> Referrals
+        </li>
+      </ul>
+      <div class="logout">
+        <i class="icon">🚪</i> Log out
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- User Info Section -->
+      <section id="user-info" class="section active">
+        <div class="profile-header">
+            <div class="avatar-container">
+                <!-- Display current avatar or default avatar if none exists -->
+                <img src="<%= user.avatar || '/images/user-avatar.png' %>" alt="User Avatar" class="avatar" id="profile-avatar">
+                
+                <!-- Avatar file input (hidden) for file selection -->
+                <form id="avatarUpload" enctype="multipart/form-data">
+                    <label for="avatarInput" class="edit-avatar">
+                        <i class="fas fa-pencil-alt"></i> Change Avatar
+                    </label>
+                    <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;" onchange="previewAvatar(event)">
+                </form>
+            </div>
+    
+            <div class="user-details">
+                <h1 class="username"><%= user.username %></h1>
+                <p class="location"><i class="fa fa-envelope"></i> <%= user.email %></p>
+            </div>
+        </div>
+    
+        <!-- Form for updating user profile details -->
+        <form id="profileForm" class="profile-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">First Name</label>
+                    <input type="text" id="name" name="firstName" value="<%= user.first_name %>">
+                </div>
+                <div class="form-group">
+                    <label for="fullName">Last Name</label>
+                    <input type="text" id="fullName" name="lastName" value="<%= user.last_name %>">
+                </div>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" value="<%= user.username %>" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" value="<%= user.email %>">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" value="<%= user.phone %>">
+                </div>
+            </div>
+    
+            <div class="form-actions">
+                <button type="submit" id="saveChangesBtn" class="save-button">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </section>
+    
+      <!-- Past Tasks Section -->
+      <section id="past-tasks" class="section">
+        <h2>Past Tasks</h2>
+        <p class="tasks-intro">Here’s a record of your completed and ongoing tasks:</p>
+        
+        <!-- Task List -->
+        <% if (tasks.length > 0) { %>
+            <div class="task-list">
+                <% tasks.forEach(task => { %>
+                    <div class="task-item">
+                        <div class="task-details">
+                            <h3 class="task-name"><%= task.task_name %></h3>
+                            <p class="task-amount"><i class="fa-solid fa-naira-sign"></i> <%= task.task_price %></p>
+                            <p class="task-status <%= task.approval_status %>">
+                                <i class="fas fa-check-circle"></i> <%= task.approval_status %>
+                            </p>
+                            <p class="submission-date">
+                                Submitted on: <%= new Date(task.submission_date).toLocaleDateString() %>
+                            </p>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <p>No tasks found.</p>
+        <% } %>
+    </section>
+    
+      
+      <!-- Account Section -->
+      <section id="account" class="section">
+        <h2>Account</h2>
+        <p>Manage your subscription, payment methods, and account details here.</p>
+      
+        <!-- Subscription Info -->
+        <div class="subscription-info">
+          <p class="current-plan"><strong>Current Plan:</strong> <%= currentPlan %></p>
+          <p class="expiration-date"><strong>Expires on:</strong> <span id="plan-expiry-date"><%= planExpiryDate %></span></p>
+          <p class="countdown"><strong>Time Remaining:</strong> <span id="countdown-timer">Loading...</span></p>
+        </div>
+      
+        <!-- Action Buttons -->
+        <div class="account-actions">
+          <button class="update-account">Update Payment Details / Change Plan</button>
+        </div>
+      </section>
+      
+      
+      <!-- Withdrawal Section -->
+      <section id="withdrawal" class="section">
+        <h2>Withdrawal</h2>
+      
+        <!-- Balance Display -->
+        <div class="balance-info">
+          <p>Available Balance: <strong id="available-balance"><i class="fa-solid fa-naira-sign"></i><%= balance %></strong></p>
+          <button class="withdraw-button">Withdraw Funds</button>
+        </div>
+      
+        <!-- Transaction History -->
+        <div class="transaction-history">
+          <h3>History</h3>
+          <ul class="history-list">
+            <% transactions.forEach(transaction => { %>
+              <li class="history-item">
+                <span class="source"><%= transaction.source %></span>
+                <span class="amount <%= transaction.amount < 0 ? 'deducted' : '' %>"><%= transaction.amount < 0 ? '-' : '+' %>₦<%= Math.abs(transaction.amount) %></span>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      </section>
+      
+      <!-- Referrals Section -->
+      <section id="referrals" class="section">
+        <h2>Referrals Board</h2>
+      
+        <!-- Referral Overview -->
+        <div class="referral-overview">
+          <p>Your Referral Code: <strong id="referral-code"><%= user.referral_code %></strong></p>
+          <button class="copy-code-btn" onclick="copyReferralCode()">Copy Code</button>
+          <p>Total Referrals: <strong id="total-referrals"><%= referrals.length %></strong></p>
+        </div>
+      
+        <!-- Subscribed Referrals -->
+        <div class="referral-details">
+          <div class="referral-summary">
+            <h3>Subscribed Referrals</h3>
+            <p>
+              <strong id="subscribed-referrals">
+                <%= referrals.filter(referral => referral.bonusEligible).length %>
+              </strong> 
+              out of 
+              <span id="total-referrals-summary"><%= referrals.length %></span> referrals have subscribed.
+            </p>
+          </div>
+          <div class="earnings-info">
+            <h3>Earnings</h3>
+            <p>Total Earnings: <strong id="total-earnings">N<%= referrals.filter(referral => referral.bonusEligible).length * 500 %></strong></p>
+          </div>
+        </div>
+      
+        <!-- Referrals Breakdown -->
+        <div class="referrals-list">
+          <h3>Referrals Breakdown</h3>
+          <ul class="list">
+            <% referrals.forEach(referral => { %>
+              <li class="list-item">
+                <span class="referral-username">Username: <%= referral.referred_username %></span>
+                <span class="referral-code">Code: <%= referral.referralCode %></span>
+                <span class="subscription-status">
+                  Subscription: <%= referral.subscription_status !== 'No Subscription' ? referral.referred_user_plan : 'No Subscription' %>
+                </span>
+                <span class="bonus-status">
+                  Bonus Eligible: <%= referral.bonusEligible ? 'Yes' : 'No' %>
+                </span>
+                <span class="joined-date">Joined: <%= new Date(referral.joined_date).toLocaleDateString() %></span>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      </section>
+         
+    </main>
+  </div>
+
+<script>
+  // Inject dynamic data into JavaScript
+const transactions = <%- JSON.stringify(transactions) %>;  // Inject transactions
+const referrals = <%- JSON.stringify(referrals) %>;          // Inject referrals
+const planExpiryDate = "<%= planExpiryDate %>";  // Inject plan expiry date (ensure this value doesn't contain special characters)
+
+// Avatar preview
+function previewAvatar(event) {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+  
+  reader.onload = function (e) {
+    const avatarImage = document.getElementById('profile-avatar');
+    avatarImage.src = e.target.result;
+  };
+
+  if (file) {
+    reader.readAsDataURL(file);
+  }
+}
+
+// Copy referral code
+function copyReferralCode() {
+  const referralCode = document.getElementById("referral-code").textContent;
+  navigator.clipboard.writeText(referralCode).then(() => {
+    alert("Referral code copied to clipboard!");
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  // Sidebar navigation
+  const menuItems = document.querySelectorAll("#menu li");
+  const sections = document.querySelectorAll(".section");
+
+  menuItems.forEach(item => {
+    item.addEventListener("click", () => {
+      menuItems.forEach(menu => menu.classList.remove("active"));
+      sections.forEach(section => section.classList.remove("active"));
+
+      item.classList.add("active");
+      const sectionId = item.getAttribute("data-section");
+      document.getElementById(sectionId).classList.add("active");
+    });
+  });
+
+  // Redirect actions
+  document.querySelector('.withdraw-button').addEventListener('click', () => {
+    window.location.href = '/withdraw';
+  });
+
+  document.querySelector('.update-account').addEventListener('click', () => {
+    window.location.href = '/subscription';
+  });
+
+  document.querySelector('.logout').addEventListener('click', () => {
+    window.location.href = '/logout';
+  });
+
+  // Countdown Timer
+  const expiryDateText = document.getElementById("plan-expiry-date").textContent;
+  const countdownElement = document.getElementById("countdown-timer");
+
+  if (expiryDateText && expiryDateText !== "Not Available") {
+    const expiryDate = new Date(expiryDateText);
+
+    function updateCountdown() {
+      const now = new Date();
+      const timeDifference = expiryDate - now;
+
+      if (timeDifference <= 0) {
+        countdownElement.textContent = "Expired";
+        return;
+      }
+
+      const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+      countdownElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    updateCountdown(); // Initial call
+    setInterval(updateCountdown, 1000); // Update every second
+  } else {
+    countdownElement.textContent = "No Plan Expiry Available";
+  }
+
+// Handle profile form submission via AJAX
+document.getElementById('profileForm').addEventListener('submit', async function(event) {
+  event.preventDefault();
+
+  const formData = new URLSearchParams();
+  formData.append('firstName', document.getElementById('name').value);
+  formData.append('lastName', document.getElementById('fullName').value);
+  formData.append('username', document.getElementById('username').value);
+  formData.append('email', document.getElementById('email').value);
+  formData.append('phone', document.getElementById('phone').value);
+
+  try {
+      const response = await fetch('/profile/update', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString(),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+          // Display flash message
+          showFlashMessage(result.success || 'Profile updated successfully');
+          setTimeout(() => location.reload(), 2000); // Reload after flash message
+      } else {
+          alert(result.error || 'Error updating profile');
+      }
+  } catch (err) {
+      console.error('Error:', err);
+      alert('Error updating profile');
+  }
+});
+
+// Handle avatar file upload via AJAX
+document.getElementById('avatarInput').addEventListener('change', function(event) {
+  const formData = new FormData();
+  formData.append('avatar', event.target.files[0]);
+
+  fetch('/profile/update-avatar', {
+      method: 'POST',
+      body: formData,  // Send avatar file
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.success) {
+          // Trigger success flash message
+          document.getElementById('profile-avatar').src = data.avatarPath;
+          showFlashMessage(data.success || 'Avatar updated successfully.');
+          setTimeout(() => location.reload(), 2000); // Reload after flash message
+      } else {
+          alert(data.error || 'Error updating avatar');
+      }
+  })
+  .catch(error => {
+      console.error('Error:', error);
+      alert('Error uploading avatar');
+  });
+});
+
+
+// Function to display flash messages
+function showFlashMessage(message) {
+    const flashMessage = document.createElement('div');
+    flashMessage.classList.add('notification', 'success');
+    flashMessage.innerHTML = `<p>${message}</p>`;
+    document.body.appendChild(flashMessage);
+    setTimeout(() => flashMessage.classList.add('hide'), 5000);
+}
+
+  
+});
+
+</script>
+  
+<script src="/js/profile.js"></script>
+</body>
+</html>

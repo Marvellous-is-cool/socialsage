@@ -1,0 +1,65 @@
+/* Gradient Text for Header */
+.gradient-text {
+    background: linear-gradient(90deg, #6dd5ed, #2193b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Task Overview */
+.task-overview {
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* Upload Box */
+.upload-box {
+    height: 150px;
+    border: 2px dashed #6c757d;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.upload-box:hover {
+    background: #e9ecef;
+    border-color: #495057;
+}
+
+.upload-preview {
+    font-size: 1rem;
+    color: #6c757d;
+    text-align: center;
+}
+
+.upload-preview img {
+    width: 100%;
+    height: auto;
+    max-height: 100px;
+    object-fit: cover;
+}
+
+
+/* Modal Animation */
+.modal.fade .modal-dialog {
+    transform: translate(0, -50px);
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.modal.fade.show .modal-dialog {
+    transform: translate(0, 0);
+    opacity: 1;
+}
+
+/* Progress Bar */
+.progress-bar {
+    height: 20px;
+    font-size: 1rem;
+    line-height: 20px;
+}

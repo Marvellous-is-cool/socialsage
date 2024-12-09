@@ -1,0 +1,70 @@
+<% if (success_message.length > 0) { %>
+    <div class="notification success">
+      <%= success_message %>
+    </div>
+  <% } %>
+  <% if (error_message.length > 0) { %>
+    <div class="notification error">
+      <%= error_message %>
+    </div>
+  <% } %>
+  
+  <style>
+    /* Container for notifications */
+    .notification {
+      position: absolute;
+      top: 20px;  /* Space from the top */
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 16px;
+      max-width: 90%;
+      z-index: 9999;
+      transition: opacity 0.3s ease, top 0.3s ease;
+      width: auto;
+    }
+  
+    /* Success notification */
+    .notification.success {
+      background-color: #4caf50; /* Green */
+      color: white;
+      border: 1px solid #45a049;
+    }
+  
+    /* Error notification */
+    .notification.error {
+      background-color: #f44336; /* Red */
+      color: white;
+      border: 1px solid #e53935;
+    }
+  
+    /* Notification fading animation */
+    .notification.success, .notification.error {
+      opacity: 1;
+    }
+  
+    .notification.hide {
+      opacity: 0;
+      top: -100px;  /* Moves out of view */
+    }
+  
+    /* Optional styling for text inside */
+    .notification p {
+      margin: 0;
+      font-weight: bold;
+    }
+  </style>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const notification = document.querySelector('.notification');
+  
+      if (notification) {
+        setTimeout(() => {
+          notification.classList.add('hide');
+        }, 5000); // Hide the notification after 5 seconds
+      }
+    });
+  </script>
+  

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SocialSage | Task</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/task.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <!-- Flash Messages -->
+    <%- include('./addons/layout.ejs') %>
+
+    <!-- Task Header -->
+    <header class="text-center mb-4">
+      <h1 class="display-5 fw-bold gradient-text">SocialSage | Task</h1>
+    </header>
+
+    <!-- Task Overview Section -->
+    <section class="task-overview card shadow-sm p-4 mb-4">
+      <h3 class="text-primary fw-bold"><%= task.name || 'Task Name' %></h3>
+      <p class="task-amount text-danger fw-bold fs-4">
+        <span id="countdown"><%= task.expirationTime || 'N/A' %></span> - N<%= task.amount || '0.00' %>
+      </p>
+      <p><strong>Instructions:</strong> <%= task.instructions || 'No instructions available' %></p>
+    </section>
+
+    <!-- Task Progress Section -->
+    <section class="task-progress mb-4">
+      <p class="fw-bold">Progress:</p>
+      <div class="progress" style="height: 20px;">
+        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="progress" style="width: 0;"></div>
+      </div>
+    </section>
+
+    <!-- Task Steps Section -->
+    <section class="task-steps mb-4">
+      <ul class="list-group">
+        <% task.steps.forEach((step, index) => { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center step-item" data-step-index="<%= index %>">
+            <span>
+              Step <%= index + 1 %>: 
+              <% 
+                const urlMatch = step.name.match(/https?:\/\/\S+/);
+                if (urlMatch) { 
+                  const url = urlMatch[0];
+                  const restText = step.name.replace(url, '');
+              %>
+                <%= restText %>
+                <a href="<%= url %>" target="_blank" class="text-decoration-underline"><%= url %></a>
+              <% } else { %>
+                <%= step.name %>
+              <% } %>
+            </span>
+            <button class="btn btn-outline-success mark-done">Mark as Done</button>
+          </li>
+        <% }); %>
+      </ul>
+    </section>
+
+    <!-- Media Upload Section -->
+    <section class="upload-media mb-4">
+      <h3 class="fw-bold">Upload Media</h3>
+      <p>Click to upload up to 3 images for proof:</p>
+      <div class="row g-3">
+        <% [1, 2, 3].forEach(boxId => { %>
+          <div class="col-md-4">
+            <div class="upload-box shadow-sm position-relative text-center">
+              <input 
+                type="file" 
+                class="form-control-file upload-input d-none" 
+                accept="image/*" 
+                id="upload-input-<%= boxId %>" 
+                onchange="handleImageUpload(event, <%= boxId %>)"
+              />
+              <div 
+                class="upload-preview d-flex flex-column align-items-center justify-content-center" 
+                id="preview-<%= boxId %>" 
+                onclick="document.getElementById('upload-input-<%= boxId %>').click();"
+              >
+                <span class="fs-4">+</span>
+                <span>Click to choose files</span>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+
+    <!-- Submit Button Section -->
+    <section class="submit-task-section text-center d-none">
+      <button id="submit-task" class="btn btn-primary btn-lg">Submit Task</button>
+    </section>
+
+    <!-- Modal for Confirmation -->
+    <div id="confirm-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirm Submission</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to submit? It will be reviewed before payment.</p>
+          </div>
+          <div class="modal-footer">
+            <button id="confirm-yes" class="btn btn-success">Yes</button>
+            <button id="confirm-no" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="position-fixed top-50 start-50 translate-middle d-none">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+  <script src="/js/task.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const steps = document.querySelectorAll('.step-item');
+      const progressBar = document.querySelector('.progress-bar');
+      const submitButton = document.querySelector('.submit-task-section');
+      const modal = new bootstrap.Modal(document.getElementById('confirm-modal'));
+      const loader = document.getElementById('loader');
+
+      let completedSteps = 0;
+
+      // Countdown Timer
+      const countdownElement = document.getElementById('countdown');
+      const expirationTime = new Date("<%= task.expirationTime %>");
+
+      function updateCountdown() {
+        const now = new Date();
+        const timeDifference = expirationTime - now;
+
+        if (timeDifference <= 0) {
+          countdownElement.textContent = "Expired";
+          clearInterval(countdownInterval);
+        } else {
+          const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+          const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+          countdownElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+        }
+      }
+
+      const countdownInterval = setInterval(updateCountdown, 1000);
+
+      // Mark Step as Done
+      steps.forEach((step) => {
+        const button = step.querySelector('.mark-done');
+        button.addEventListener('click', () => markStepAsDone(step, button));
+      });
+
+      // Update Progress Bar
+      function updateProgress() {
+        const percentage = (completedSteps / steps.length) * 100;
+        progressBar.style.width = `${percentage}%`;
+        progressBar.textContent = `${Math.round(percentage)}%`;
+      }
+
+      // Mark Step as Done
+      function markStepAsDone(step, button) {
+        if (confirm('Mark this step as done?')) {
+          step.classList.add('list-group-item-success');
+          button.disabled = true;
+          completedSteps++;
+          updateProgress();
+          if (completedSteps === steps.length) {
+            submitButton.classList.remove('d-none');
+          }
+        }
+      }
+
+      // Submit Button Click
+      document.getElementById('submit-task').addEventListener('click', () => {
+        const submitBtn = document.getElementById('submit-task');
+        submitBtn.disabled = true;
+        modal.show();
+      });
+
+      // Confirm Submission
+      document.getElementById('confirm-yes').addEventListener('click', () => {
+        submitTask();
+      });
+
+      // Handle Image Upload Preview
+      window.handleImageUpload = function (event, boxId) {
+        const input = event.target;
+        const preview = document.getElementById(`preview-${boxId}`);
+        preview.innerHTML = ""; // Clear the preview box
+
+        if (input.files && input.files[0]) {
+          const file = input.files[0];
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            const img = document.createElement("img");
+            img.src = e.target.result;
+            img.className = "img-fluid rounded";
+            img.style.maxHeight = "100px";
+            preview.appendChild(img);
+          };
+
+          reader.readAsDataURL(file);
+        }
+      };
+
+      // Submit Task via AJAX
+function submitTask() {
+  const formData = new FormData();
+  const taskId = <%= task.id %>; 
+  formData.append('submitted_task_id', taskId);
+
+  // Append uploaded files
+  for (let i = 1; i <= 3; i++) {
+    const fileInput = document.getElementById(`upload-input-${i}`);
+    if (fileInput.files.length > 0) {
+      formData.append(`media_upload_${i}`, fileInput.files[0]);
+    }
+  }
+
+  // Show loader
+  loader.classList.remove('d-none');
+
+  // Submit the task
+  fetch('/task/submit-task', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    // Hide loader
+    loader.classList.add('d-none');
+
+    if (data.error) {
+      // Display error message
+      const errorMessage = data.error || 'Failed to submit the task.';
+      displayNotification('error', errorMessage);
+    } else {
+      // Display success message
+      const successMessage = data.message || 'Task submitted successfully';
+      displayNotification('success', successMessage);
+      window.location.href = '/dashboard'; // Redirect to dashboard
+    }
+  })
+  .catch(error => {
+    // Hide loader
+    loader.classList.add('d-none');
+    displayNotification('error', 'Failed to submit the task.');
+  });
+}
+
+// Display notifications
+function displayNotification(type, message) {
+  const notificationContainer = document.createElement('div');
+  notificationContainer.classList.add('notification', type);
+  notificationContainer.innerHTML = `<p>${message}</p>`;
+  document.body.appendChild(notificationContainer);
+
+  // Hide the notification after 5 seconds
+  setTimeout(() => {
+    notificationContainer.classList.add('hide');
+    setTimeout(() => {
+      notificationContainer.remove();
+    }, 300); // Allow fade-out animation to finish
+  }, 5000);
+}
+    });
+  </script>
+</body>
+</html>

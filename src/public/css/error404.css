@@ -1,0 +1,117 @@
+/* Global Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #1e2a47;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.error-container {
+    text-align: center;
+}
+
+.error-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.error-message {
+    margin-bottom: 40px;
+}
+
+.error-title {
+    font-size: 100px;
+    font-weight: 600;
+    color: #ff6b6b;
+    margin: 0;
+    animation: fadeIn 2s ease-out;
+}
+
+.error-description {
+    font-size: 18px;
+    color: #ddd;
+    animation: fadeIn 2s ease-out 0.5s;
+}
+
+/* Animation Container */
+.animation-container {
+    margin: 50px 0;
+}
+
+.error-animation {
+    display: inline-block;
+    position: relative;
+}
+
+.error-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #ff6b6b;
+    animation: bounce 1.5s infinite ease-in-out;
+}
+
+/* Button */
+.cta-container {
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    background-color: #ff6b6b;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 25px;
+    text-transform: uppercase;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    background-color: #ff4757;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .error-title {
+        font-size: 80px;
+    }
+
+    .error-description {
+        font-size: 16px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
